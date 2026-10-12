@@ -2162,7 +2162,8 @@ class Typer(@constructorOnly nestingLevel: Int = 0) extends Namer
    *
    *  The type parameters must be immediately followed by a value parameter, since erasure
    *  drops type applications of polymorphic functions. So `body` must be a function literal,
-   *  possibly a context function literal that results from context bounds, as in
+   *  such as `(x: A) => x` or `{ case x => x }`, possibly a context function literal that
+   *  results from context bounds, as in
    *  `[A: Ord] => summon[Ord[A]]`. Alternatively, `R` can be a context function type,
    *  from which the context closure is synthesized, as in `[A] => summon[Ord[A]]` against
    *  expected type `[A] => Ord[A] ?=> Ord[A]`. Other bodies are rejected, even if they
@@ -2180,7 +2181,7 @@ class Typer(@constructorOnly nestingLevel: Int = 0) extends Namer
         // type parameters, infer the result type from the expected type.
         untpd.InLambdaTypeTree(isResult = true, (tsyms, _) =>
           expectedPoly.resultType.substParams(expectedPoly, tsyms.map(_.typeRef)))
-    val hasValueParam = fun.isInstanceOf[untpd.Function]
+    val hasValueParam = untpd.isFunction(fun)
       || expectedPoly != null && defn.isContextFunctionType(expectedPoly.resultType)
     val closure = typed(desugar.makeClosure(tparams, fun, resultTpt, tree.span), pt)
     closure match
